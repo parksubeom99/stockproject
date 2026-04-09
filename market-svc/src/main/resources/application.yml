@@ -1,0 +1,47 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: market-svc
+  profiles:
+    active: mock                          # Gate 2-P: 기본 mock 프로파일
+
+  # Redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  # Kafka
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9093}   # Docker: debate-kafka:9092
+    consumer:
+      group-id: market-svc-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Market svc 전용 설정
+market:
+  alpha-vantage:
+    api-key: ${ALPHA_VANTAGE_API_KEY:demo}   # mock 프로파일에서는 미사용
+    base-url: https://www.alphavantage.co/query
+  cache:
+    quote-ttl-seconds: 10                     # 시세 캐시 TTL
+  kafka:
+    topic:
+      debate-requested: debate.requested      # PC-12 고정값

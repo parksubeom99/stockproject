@@ -1,0 +1,22 @@
+# 환경변수 파일 — 절대 커밋 금지
+.env
+.env.local
+.env.*.local
+
+# Gradle 빌드 산출물
+**/build/
+**/.gradle/
+**/out/
+
+# IDE
+**/.idea/
+**/*.iml
+**/.vscode/
+
+# React Native / Expo
+stock-app/node_modules/
+stock-app/.expo/
+stock-app/dist/
+
+# 로그
+*.log

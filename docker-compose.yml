@@ -1,0 +1,114 @@
+
+# ============================================================
+# stockProject 전체 스택 통합 docker-compose
+# 기동: docker compose up -d --build
+# 종료: docker compose down
+# 볼륨 초기화: docker compose down -v
+# Phase 6: ANTHROPIC_API_KEY를 루트 .env 파일에 설정 후 기동
+# ============================================================
+
+services:
+
+  # ── 인프라 ─────────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: stock-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: "*"
+    ports:
+      - "2182:2181"
+    networks:
+      - stockproject-net
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: stock-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9093:9093"
+    networks:
+      - stockproject-net
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  market-redis:
+    image: redis:7-alpine
+    container_name: stock-redis
+    ports:
+      - "6380:6379"
+    networks:
+      - stockproject-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── 애플리케이션 ────────────────────────────────────────
+  ai-debate-svc:
+    build:
+      context: ./ai-debate-svc
+      dockerfile: Dockerfile
+    container_name: stock-debate-svc
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_PROFILES_ACTIVE: prod
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    ports:
+      - "8083:8083"
+    networks:
+      - stockproject-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  market-svc:
+    build:
+      context: ./market-svc
+      dockerfile: Dockerfile
+    container_name: stock-market-svc
+    depends_on:
+      kafka:
+        condition: service_healthy
+      market-redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: mock
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_HOST: market-redis
+      REDIS_PORT: 6379
+    ports:
+      - "8085:8081"
+    networks:
+      - stockproject-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+networks:
+  stockproject-net:
+    driver: bridge

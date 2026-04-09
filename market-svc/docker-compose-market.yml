@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  market-svc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: market-svc
+    ports:
+      - "8085:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: mock
+      KAFKA_BOOTSTRAP_SERVERS: debate-kafka:9092
+      REDIS_HOST: market-redis
+      REDIS_PORT: 6379
+    depends_on:
+      market-redis:
+        condition: service_healthy
+    networks:
+      - market-net
+      - debate-net
+
+  market-redis:
+    image: redis:7-alpine
+    container_name: market-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - market-net
+
+networks:
+  market-net:
+    driver: bridge
+  debate-net:
+    external: true
+    name: ai-debate-svc_default
