@@ -124,6 +124,9 @@ export default function DebateRequestScreen({ navigation, route }: Props) {
             multiline
             numberOfLines={4}
             textAlignVertical="top"
+            autoCapitalize="none"      // ✅ 한글 입력 픽스
+            autoCorrect={false}         // ✅ 자동 교정 비활성화
+            keyboardType="default"      // ✅ 기본 키보드 (한/영 전환 가능)
           />
           <Text style={styles.charCount}>{thesis.length} / 200</Text>
         </View>
@@ -156,7 +159,7 @@ export default function DebateRequestScreen({ navigation, route }: Props) {
           ) : (
             <>
               <Text style={styles.submitBtnText}>AI 토론 시작</Text>
-              <Text style={styles.submitBtnSub}>5인 위원회 분석 · 약 30초 소요</Text>
+              <Text style={styles.submitBtnSub}>5인 위원회 분석 · 약 2분 소요</Text>
             </>
           )}
         </TouchableOpacity>

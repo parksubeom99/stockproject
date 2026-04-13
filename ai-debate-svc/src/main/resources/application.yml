@@ -4,8 +4,6 @@ server:
 spring:
   application:
     name: ai-debate-svc
-  # Phase 6 완료: docker-compose에서 SPRING_PROFILES_ACTIVE=prod 로 주입
-  # 로컬 단독 실행 시 mock 사용: SPRING_PROFILES_ACTIVE=mock ./gradlew bootRun
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:mock}
 
@@ -20,15 +18,14 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      # debateId 기반 파티션 키 설정 (Gate 2 Kafka 순서 보장 대응)
       acks: all
       retries: 3
 
 anthropic:
   api-key: ${ANTHROPIC_API_KEY}
-  model: claude-sonnet-4-20250514
+  model: claude-haiku-4-5-20251001   # Sonnet → Haiku: 5~10배 빠름, 1/10 비용
 
 logging:
   level:
-    com.invest.debate: DEBUG
+    com.invest.debate: INFO   # DEBUG → INFO: 로그 양 줄여 성능 개선
     org.springframework.kafka: INFO

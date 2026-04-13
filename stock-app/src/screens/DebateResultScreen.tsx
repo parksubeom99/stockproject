@@ -26,8 +26,8 @@ interface DebateReport {
 
 type PollingStatus = 'POLLING' | 'COMPLETED' | 'ERROR';
 
-const POLLING_INTERVAL_MS = 5000;   // 5초 간격 (API 응답 대기 여유)
-const POLLING_MAX_ATTEMPTS = 36;    // 36 × 5초 = 최대 3분 (5인 × 30초 여유)
+const POLLING_INTERVAL_MS = 5000;   // 5초 간격
+const POLLING_MAX_ATTEMPTS = 180;   // 180 × 5초 = 최대 15분 (EL 마지막 페르소나 완료 대응)
 
 export default function DebateResultScreen({ navigation, route }: Props) {
   const { requestId, symbol, thesis } = route.params;
@@ -38,8 +38,6 @@ export default function DebateResultScreen({ navigation, route }: Props) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    // debate-svc에서 requestId로 결과 조회
-    // market-svc가 Kafka로 발행 → debate-svc가 소비 후 InMemory 저장
     const poll = async () => {
       try {
         const res = await fetch(`${API.DEBATE_BASE}/debate/${requestId}/report`);
@@ -75,7 +73,6 @@ export default function DebateResultScreen({ navigation, route }: Props) {
       }
     };
 
-    // 즉시 1회 실행 후 폴링
     poll();
     timerRef.current = setInterval(poll, POLLING_INTERVAL_MS);
 
@@ -83,6 +80,18 @@ export default function DebateResultScreen({ navigation, route }: Props) {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [requestId]);
+
+  // 경과 시간 (분:초)
+  const elapsedSeconds = attempts * (POLLING_INTERVAL_MS / 1000);
+  const elapsedMin = Math.floor(elapsedSeconds / 60);
+  const elapsedSec = Math.floor(elapsedSeconds % 60);
+  const elapsedLabel = `${elapsedMin}:${String(elapsedSec).padStart(2, '0')}`;
+
+  // 페르소나 진행 표시 — 15분 기준으로 5등분
+  const personaCompletedCount = Math.min(
+    Math.floor((attempts / POLLING_MAX_ATTEMPTS) * 5),
+    4 // 마지막 EL은 COMPLETED 시 점등
+  );
 
   const probColor = report
     ? report.successProbability >= 70
@@ -120,23 +129,20 @@ export default function DebateResultScreen({ navigation, route }: Props) {
             <ActivityIndicator size="large" color="#3D7BFF" style={styles.spinner} />
             <Text style={styles.pollingTitle}>5인 AI 위원회 분석 중</Text>
             <View style={styles.personaProgress}>
-              {['AMODEI', 'ALTMAN', 'MUSK', 'KARPATH', 'EL'].map((name, i) => {
-                const completedCount = Math.floor((attempts / POLLING_MAX_ATTEMPTS) * 5);
-                return (
-                  <View key={name} style={styles.progressItem}>
-                    <View
-                      style={[
-                        styles.progressDot,
-                        { backgroundColor: i < completedCount ? '#00C896' : '#2A3250' },
-                      ]}
-                    />
-                    <Text style={styles.progressName}>{name}</Text>
-                  </View>
-                );
-              })}
+              {['AMODEI', 'ALTMAN', 'MUSK', 'KARPATH', 'EL'].map((name, i) => (
+                <View key={name} style={styles.progressItem}>
+                  <View
+                    style={[
+                      styles.progressDot,
+                      { backgroundColor: i < personaCompletedCount ? '#00C896' : '#2A3250' },
+                    ]}
+                  />
+                  <Text style={styles.progressName}>{name}</Text>
+                </View>
+              ))}
             </View>
             <Text style={styles.pollingNote}>
-              분석 중 · 최대 {Math.round((POLLING_MAX_ATTEMPTS * POLLING_INTERVAL_MS) / 60000)}분 소요
+              경과 {elapsedLabel} · 최대 {Math.round((POLLING_MAX_ATTEMPTS * POLLING_INTERVAL_MS) / 60000)}분 소요
             </Text>
           </View>
         )}

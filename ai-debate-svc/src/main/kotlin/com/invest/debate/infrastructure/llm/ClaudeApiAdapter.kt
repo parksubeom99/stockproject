@@ -16,7 +16,7 @@ import java.time.Duration
 @Component
 class ClaudeApiAdapter(
     @Value("\${anthropic.api-key}") private val apiKey: String,
-    @Value("\${anthropic.model:claude-sonnet-4-20250514}") private val model: String
+    @Value("\${anthropic.model:claude-haiku-4-5-20251001}") private val model: String
 ) : LlmPort {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -37,26 +37,26 @@ class ClaudeApiAdapter(
         val systemPrompt = buildSystemPrompt(persona)
         val request = ClaudeRequest(
             model = model,
-            maxTokens = 1000,
+            maxTokens = 800,   // Haiku 기준 충분, 토큰 절약
             system = systemPrompt,
             messages = listOf(
                 ClaudeMessage(role = "user", content = context)
             )
         )
 
-        log.debug("[LLM] {} 호출 시작", persona.displayName)
+        log.info("[LLM] {} 호출 시작 (model={})", persona.displayName, model)
 
         return webClient.post()
             .uri("/v1/messages")
             .bodyValue(request)
             .retrieve()
             .bodyToMono(ClaudeResponse::class.java)
-            .timeout(Duration.ofSeconds(30))  // Gate 1 위험항목 대응: timeout 설정
+            .timeout(Duration.ofSeconds(90))  // Haiku: 10~25s, Sonnet: 60~120s → 90s로 여유 확보
             .map { response ->
                 response.content.firstOrNull()?.text
                     ?: throw IllegalStateException("Empty response from Claude API")
             }
-            .doOnSuccess { log.debug("[LLM] {} 응답 완료 ({}자)", persona.displayName, it.length) }
+            .doOnSuccess { log.info("[LLM] {} 응답 완료 ({}자)", persona.displayName, it.length) }
             .doOnError { e -> log.error("[LLM] {} 호출 실패: {}", persona.displayName, e.message) }
             .retry(1)  // 네트워크 오류 시 1회 재시도
     }
