@@ -20,3 +20,4 @@ stock-app/dist/
 
 # 로그
 *.log
+debate-logs.txt
