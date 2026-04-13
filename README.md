@@ -5,6 +5,22 @@
 
 ---
 
+## 📱 스크린샷
+
+| 메인 시세 화면 | 드롭다운 검색 | 종목 상세 |
+|:---:|:---:|:---:|
+| ![메인](docs/screens/main_quotes.webp) | ![드롭다운](docs/screens/main_dropdown.webp) | ![카카오](docs/screens/kakao_detail.webp) |
+
+| AI 토론 요청 | 토론 시작 | 분석 중 |
+|:---:|:---:|:---:|
+| ![요청](docs/screens/debate_request.webp) | ![시작](docs/screens/debate_start.webp) | ![로딩](docs/screens/debate_loading.webp) |
+
+| AI 분석 결과 | 권장 액션 |
+|:---:|:---:|
+| ![결과](docs/screens/debate_result.webp) | ![액션](docs/screens/debate_actions.webp) |
+
+---
+
 ## 핵심 아이디어
 
 주식 매수 결정 전, 5명의 AI 전문가(AMODEI → ALTMAN → MUSK → KARPATHY → EL)가  
@@ -92,6 +108,7 @@
 ```
 stockProject/
 ├── docker-compose.yml          ← 전체 스택 단일 기동
+├── docs/screens/               ← 앱 스크린샷
 ├── ai-debate-svc/              ← 5인 토론 서비스
 │   ├── Dockerfile              ← multi-stage build
 │   ├── src/main/kotlin/
@@ -193,9 +210,9 @@ gradlew test
 | `SPRING_PROFILES_ACTIVE` | `mock` | `prod` 으로 변경 시 Claude API 실 연결 |
 | `KAFKA_BOOTSTRAP_SERVERS` | `kafka:9092` | Docker 내부 통신 |
 | `REDIS_HOST` | `market-redis` | Docker 내부 통신 |
-| `ANTHROPIC_API_KEY` | — | Phase 6: `.env` 파일에 추가 |
+| `ANTHROPIC_API_KEY` | — | `.env` 파일에 추가 |
 
-### Claude API 활성화 (Phase 6)
+### Claude API 활성화
 
 ```bash
 # 루트에 .env 파일 생성 (.gitignore에 추가 필수)
