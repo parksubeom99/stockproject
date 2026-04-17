@@ -85,24 +85,29 @@ class DebateOrchestrationService(
     }
 
     private fun handleSuccess(session: DebateSession): Mono<DebateSession> {
-        val elPhase = session.phases.find { it.persona == PersonaType.EL }
-        val report = DebateReport(
-            consensus = elPhase?.output ?: "합의 도출 완료",
-            successProbability = 67,
-            disputes = session.phases
-                .flatMap { it.counterArgs }
-                .take(3),
-            actions = listOf("Kafka Outbox 프로토타입 생성", "UI 목업 검토", "리스크 리뷰 미팅")
-        )
-        session.complete(report)
-        log.info("[Debate:{}] 완료 처리", session.debateId)
+        val report = session.report ?: run {
+            val elPhase = session.phases.find { it.persona == PersonaType.EL }
+            val fallback = DebateReport(
+                consensus = elPhase?.output ?: "합의 도출 완료",
+                successProbability = 67,
+                disputes = session.phases.flatMap { it.counterArgs }.take(3),
+                actions = listOf("Kafka Outbox 프로토타입 생성", "UI 목업 검토", "리스크 리뷰 미팅")
+            )
+            session.complete(fallback)
+            fallback
+        }
+        log.info("[Debate:{}] 완료 처리 | 성공확률={}%", session.debateId, report.successProbability)
+
+        val verdict = session.phases.find { it.persona == PersonaType.KARPATHY }?.verdict ?: Verdict.PASS
 
         return repository.save(session)
             .flatMap { saved ->
                 val event = DebateCompletedEvent(
                     debateId = saved.debateId,
                     userId = saved.userId,
-                    successProbability = report.successProbability
+                    symbol = saved.ticker.value,
+                    successProbability = report.successProbability,
+                    status = verdict
                 )
                 eventPublisher.publish(event).thenReturn(saved)
             }
@@ -118,7 +123,11 @@ class DebateOrchestrationService(
             session.fail()
             repository.save(session)
                 .flatMap { saved ->
-                    val event = DebateFailedEvent(debateId = saved.debateId, reason = "KARPATHY_MAX_RETRY")
+                    val event = DebateFailedEvent(
+                        debateId = saved.debateId,
+                        symbol = saved.ticker.value,
+                        reason = "KARPATHY_MAX_RETRY"
+                    )
                     eventPublisher.publish(event).thenReturn(saved)
                 }
         }

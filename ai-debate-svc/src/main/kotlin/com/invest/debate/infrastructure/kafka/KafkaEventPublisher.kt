@@ -26,8 +26,10 @@ class KafkaEventPublisher(
                         mapOf(
                             "debateId" to event.debateId,
                             "userId" to event.userId,
+                            "symbol" to event.symbol,
                             "successProbability" to event.successProbability,
-                            "occurredAt" to event.occurredAt
+                            "status" to event.status.name,
+                            "completedAt" to event.occurredAt
                         )
                     )
                 )
@@ -37,8 +39,9 @@ class KafkaEventPublisher(
                     objectMapper.writeValueAsString(
                         mapOf(
                             "debateId" to event.debateId,
+                            "symbol" to event.symbol,
                             "reason" to event.reason,
-                            "occurredAt" to event.occurredAt
+                            "failedAt" to event.occurredAt
                         )
                     )
                 )
