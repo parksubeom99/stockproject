@@ -25,6 +25,9 @@ dependencies {
     // Kafka
     implementation("org.springframework.kafka:spring-kafka")
 
+    // Redis (Reactive) — DebateSession 영속성
+    implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
+
     // Jackson (Kotlin)
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")

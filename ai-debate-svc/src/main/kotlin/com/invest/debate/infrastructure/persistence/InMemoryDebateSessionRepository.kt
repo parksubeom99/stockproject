@@ -2,15 +2,17 @@ package com.invest.debate.infrastructure.persistence
 
 import com.invest.debate.domain.model.*
 import com.invest.debate.domain.port.DebateSessionRepository
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Mono
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * InMemory 구현체 — Docker Compose 기동 확인용
- * 추후 R2DBC(PostgreSQL) 또는 MongoDB로 교체 예정
+ * InMemory 구현체 — 테스트 전용
+ * 실환경에서는 RedisDebateSessionRepository 사용 (@Profile("!test"))
  */
 @Repository
+@Profile("test")
 class InMemoryDebateSessionRepository : DebateSessionRepository {
 
     private val store = ConcurrentHashMap<DebateId, DebateSession>()

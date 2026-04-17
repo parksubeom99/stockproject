@@ -96,10 +96,14 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      market-redis:
+        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_PROFILES_ACTIVE: prod
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      REDIS_HOST: market-redis
+      REDIS_PORT: 6379
     ports:
       - "8083:8083"
     networks:
