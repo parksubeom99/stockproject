@@ -13,13 +13,14 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Redis 기반 DebateSession 영속성 구현체
+ * Redis 기반 DebateSession 영속성 구현체 — prod 프로파일 전용
  * - TTL 24시간 (토론 데이터는 일회성, 장기 보관 불필요)
  * - DebateSession 내부의 mutable 상태는 Snapshot DTO로 직렬화
  * - Spring Boot AutoConfig의 reactiveStringRedisTemplate 사용 (market-svc 패턴)
+ * - mock/test 환경에서는 InMemoryDebateSessionRepository 사용 (Redis 없이 standalone 기동 가능)
  */
 @Repository
-@Profile("!test")
+@Profile("prod")
 class RedisDebateSessionRepository(
     @Qualifier("reactiveStringRedisTemplate")
     private val redisTemplate: ReactiveRedisTemplate<String, String>,

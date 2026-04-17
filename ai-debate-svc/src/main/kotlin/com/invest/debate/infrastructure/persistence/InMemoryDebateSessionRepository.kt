@@ -8,11 +8,11 @@ import reactor.core.publisher.Mono
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * InMemory 구현체 — 테스트 전용
- * 실환경에서는 RedisDebateSessionRepository 사용 (@Profile("!test"))
+ * InMemory 구현체 — test/mock/default 프로파일
+ * 실환경(prod)에서는 RedisDebateSessionRepository 사용 (@Profile("prod"))
  */
 @Repository
-@Profile("test")
+@Profile("!prod")
 class InMemoryDebateSessionRepository : DebateSessionRepository {
 
     private val store = ConcurrentHashMap<DebateId, DebateSession>()
