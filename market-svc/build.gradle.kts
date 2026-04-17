@@ -36,6 +36,11 @@ dependencies {
     // Redis (Reactive)
     implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
 
+    // JWT (WebSocket 핸드셰이크 검증용)
+    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
     // Actuator
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 

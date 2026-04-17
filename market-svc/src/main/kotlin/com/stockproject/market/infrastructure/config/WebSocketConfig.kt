@@ -7,6 +7,10 @@ import org.springframework.web.reactive.HandlerMapping
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter
 
+/**
+ * WebSocket 엔드포인트 등록.
+ * 핸드셰이크 JWT 검증은 WebSocketHandshakeInterceptor(WebFilter)가 "/ws/" 경로를 가로챔.
+ */
 @Configuration
 class WebSocketConfig {
 

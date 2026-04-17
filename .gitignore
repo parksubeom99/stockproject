@@ -13,6 +13,9 @@
 **/*.iml
 **/.vscode/
 
+# Claude Code 로컬 설정 (공개 저장소 노출 금지)
+.claude/
+
 # React Native / Expo
 stock-app/node_modules/
 stock-app/.expo/

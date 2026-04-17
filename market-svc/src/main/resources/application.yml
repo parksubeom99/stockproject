@@ -45,3 +45,11 @@ market:
   kafka:
     topic:
       debate-requested: debate.requested      # PC-12 고정값
+
+# WebSocket 핸드셰이크 인증
+websocket:
+  # HS256 시크릿 — 최소 32자 (256bit)
+  # 실환경에서는 WEBSOCKET_JWT_SECRET 환경변수로 주입
+  jwt-secret: ${WEBSOCKET_JWT_SECRET:stockproject-dev-secret-key-min-32chars-hs256-portfolio!!}
+  # dev 편의용 bypass 토큰 (mock 프로파일에서만 허용)
+  dev-token: dev-token
