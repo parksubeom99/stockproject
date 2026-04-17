@@ -38,6 +38,10 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # 자동 토픽 생성 — debate.requested, debate.completed, debate.failed, debate.phase.completed
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
     ports:
       - "9093:9093"
     networks:
@@ -47,6 +51,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ── Kafka 토픽 초기화 (debate.completed, debate.failed 명시적 생성) ─────
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: stock-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - stockproject-net
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        echo "Creating Kafka topics..."
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic debate.requested --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic debate.completed --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic debate.failed --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic debate.phase.completed --partitions 1 --replication-factor 1
+        echo "Topics created. Listing:"
+        kafka-topics --bootstrap-server kafka:9092 --list
+    restart: "no"
 
   market-redis:
     image: redis:7-alpine
@@ -70,10 +96,14 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      market-redis:
+        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_PROFILES_ACTIVE: prod
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      REDIS_HOST: market-redis
+      REDIS_PORT: 6379
     ports:
       - "8083:8083"
     networks:

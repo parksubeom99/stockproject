@@ -1,6 +1,7 @@
 package com.invest.debate.domain.event
 
 import com.invest.debate.domain.model.DebateId
+import com.invest.debate.domain.model.Verdict
 import java.time.Instant
 
 sealed class DebateDomainEvent {
@@ -27,12 +28,15 @@ data class PhaseCompletedEvent(
 data class DebateCompletedEvent(
     override val debateId: DebateId,
     val userId: String,
+    val symbol: String,
     val successProbability: Int,
+    val status: Verdict,
     override val occurredAt: Instant = Instant.now()
 ) : DebateDomainEvent()
 
 data class DebateFailedEvent(
     override val debateId: DebateId,
+    val symbol: String,
     val reason: String,
     override val occurredAt: Instant = Instant.now()
 ) : DebateDomainEvent()
