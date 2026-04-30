@@ -25,10 +25,12 @@ const THESIS_TEMPLATES = [
   '실적 개선과 시장 점유율 확대로 장기 보유 전략이 최적이다.',
 ];
 
+// 데모용 사용자 ID — 실제 환경에서는 AuthContext/JWT에서 동적 획득
+const DEMO_USER_ID = 'demo-user';
+
 export default function DebateRequestScreen({ navigation, route }: Props) {
   const { symbol, price } = route.params;
   const [thesis, setThesis] = useState('');
-  const [userId] = useState('user-001');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -39,13 +41,14 @@ export default function DebateRequestScreen({ navigation, route }: Props) {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API.MARKET_BASE}/debate/request`, {
+      const res = await fetch(`${API.DEBATE_BASE}/debate/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          symbol,
+          ticker: symbol,
           thesis: thesis.trim(),
-          userId,
+          userId: DEMO_USER_ID,
+          price,
         }),
       });
 
@@ -55,7 +58,7 @@ export default function DebateRequestScreen({ navigation, route }: Props) {
 
       const data = await res.json();
       navigation.navigate('DebateResult', {
-        requestId: data.requestId,
+        requestId: data.debateId,
         symbol,
         thesis: thesis.trim(),
       });
