@@ -1,6 +1,7 @@
 # StockProject — AI Investment Analysis Platform
 
-> **5인 AI 페르소나가 순차 토론으로 투자 thesis를 검증하는 풀스택 플랫폼**  
+> **5인 AI 페르소나가 순차 토론으로 투자 명제(thesis)를 검증하는 풀스택 플랫폼**  
+> 단일 AI 챗봇이 아닙니다 — 5명이 순차로 반박하고, KARPATHY가 거부권을 행사합니다.  
 > Kotlin + Spring WebFlux + Kafka + React Native (Expo) · DDD/Hexagonal Architecture
 
 ---
@@ -45,7 +46,7 @@
 │ WebSocket    │──▶│  Kafka Consumer                   │
 │ 3s streaming │   │  DebateOrchestrationService       │
 │ Redis cache  │   │  PhaseOrchestrator (5 personas)   │
-│ Kafka pub    │   │  InMemoryRepository               │
+│ Kafka pub    │   │  RedisRepository (TTL 24h)        │
 └──────┬───────┘   └──────────────────────────────────┘
        │                        ▲
        │   debate.requested     │ consume
@@ -57,7 +58,7 @@
        │
        ▼
 ┌─────────────────┐
-│   Redis :6380   │  (market-svc 시세 캐시)
+│   Redis :6380   │  (market-svc 시세 캐시 · ai-debate-svc 토론 세션 TTL 24h)
 └─────────────────┘
 ```
 
@@ -74,6 +75,11 @@
 | 5 | **EL** (Secretary) | 최종 합의 종합 | 합의 사항 · 액션 3개 · 피드백 |
 
 **핵심 규칙:** 각 페르소나는 이전 발언만 참조 (partial visibility) → confirmation bias 제거
+
+##### 설계 의도
+- **순서의 의미** — 설계(AMODEI) → 현실(ALTMAN) → 반론(MUSK) → QA(KARPATHY) → 종합(EL). 초안을 펼친 뒤 점차 압박을 강화하는 구조입니다. 같은 정보로도 역할이 달라지면 결론이 달라집니다.
+- **partial visibility의 이유** — 각 페르소나는 *바로 이전까지의 발언만* 컨텍스트로 받습니다. 모두가 모든 정보를 공유하면 합의가 너무 쉽게 발생하고, 직전 한 명만 보면 앞선 맥락이 사라집니다. "이전까지 누적"이 두 함정 사이의 중간점입니다.
+- **KARPATHY 거부권 + 재시도** — KARPATHY가 `FAIL` 판정 시 MUSK(Phase 3)부터 재시도합니다. `MAX_RETRY=2`로 최대 3회 시도, 초과 시 `DebateFailedEvent`로 종결됩니다. 무한 토론을 차단하는 도메인 불변식입니다.
 
 ---
 
@@ -116,7 +122,7 @@ stockProject/
 │   │       ├── domain/         ← DebateSession, PersonaType, ValueObjects
 │   │       ├── application/    ← DebateOrchestrationService, PhaseOrchestrator
 │   │       └── infrastructure/ ← Kafka Consumer/Producer, LLM Adapters, Web
-│   └── src/test/kotlin/        ← JUnit5 11 tests
+│   └── src/test/kotlin/        ← JUnit5 13 tests (2 files)
 ├── market-svc/                 ← 시세 스트리밍 서비스
 │   ├── Dockerfile              ← multi-stage build
 │   ├── src/main/kotlin/
@@ -124,7 +130,7 @@ stockProject/
 │   │       ├── domain/         ← StockQuote, MarketPort
 │   │       ├── application/    ← MarketService
 │   │       └── adapter/        ← WebSocket, Kafka, Redis, MockQuote
-│   └── src/test/kotlin/        ← JUnit5 13 tests
+│   └── src/test/kotlin/        ← JUnit5 18 tests (5 files)
 └── stock-app/                  ← React Native 앱
     ├── App.tsx                 ← Stack Navigator
     └── src/
@@ -160,7 +166,7 @@ cd C:\dev\portfolio\stockProject\stock-app
 npx expo start --android
 ```
 
-> Android 에뮬레이터에서 `localhost` → `10.0.2.2` 자동 변환 (api.ts 설정)
+> Android 에뮬레이터에서 `localhost` → `10.0.2.2` 로 자동 변환됩니다 (api.ts 설정)
 
 ### 종료 및 볼륨 초기화
 
@@ -187,20 +193,22 @@ docker compose down -v     ← 볼륨 포함 완전 초기화 (Kafka 재기동 �
 
 ## 테스트
 
+> 합계 — **7 files / 31 tests** (ai-debate-svc 2/13 + market-svc 5/18)
+
 ```cmd
-REM ai-debate-svc (11 tests)
+REM ai-debate-svc (13 tests)
 cd ai-debate-svc
 gradlew test
 
-REM market-svc (13 tests)
+REM market-svc (18 tests)
 cd market-svc
 gradlew test
 ```
 
 | 서비스 | 테스트 파일 | 통과 수 |
 |--------|------------|--------|
-| ai-debate-svc | PhaseOrchestratorTest, DebateSessionTest | 11 |
-| market-svc | MarketServiceTest, QuoteWebSocketHandlerTest, MockStockQuoteAdapterTest, DebateKafkaProducerTest | 13 |
+| ai-debate-svc | PhaseOrchestratorTest, DebateSessionTest | 13 |
+| market-svc | MarketServiceTest, QuoteWebSocketHandlerTest, MockStockQuoteAdapterTest, DebateKafkaProducerTest, WebSocketHandshakeInterceptorTest | 18 |
 
 ---
 
@@ -229,6 +237,17 @@ echo ANTHROPIC_API_KEY=sk-ant-xxxx > .env
 
 ## 개발 배경
 
-> 포트폴리오 목적 + 실제 투자 의사결정 보조 도구로 병행 개발.  
-> "5인 AI 토론이 단일 AI 판단보다 confirmation bias를 제거한다"는 가설을 구현.  
+> 포트폴리오 목적 + 실제 투자 의사결정 보조 도구로 병행 개발.
+
+**검증하려는 가설** — "5인 AI가 순차로 반박하면 단일 AI보다 confirmation bias가 줄어든다."
+
+**구현 방식**
+- 페르소나 5인을 시스템 프롬프트로 분리하고, partial visibility로 컨텍스트를 통제
+- KARPATHY 거부권으로 "AI가 모두 OK"라고 답하는 함정을 구조적으로 차단
+- 토론 결과를 Kafka 이벤트(`debate.completed` / `debate.failed`)로 발행 → 외부 수집·재평가에 용이
+
+**다음 단계**
+- k6 부하 측정으로 단일 토론의 p50/p95/p99 지연을 정직하게 공개
+- 동일 thesis에 대해 단일 AI vs 5인 토론의 결과 일치율을 비교 측정
+
 > 목표: 토스뱅크 / 카카오페이 백엔드 포지션 지원.
