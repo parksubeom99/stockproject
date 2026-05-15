@@ -450,6 +450,8 @@ Spring Boot Actuator `/actuator/health` + docker-compose `condition: service_hea
 | KARPATHY 무한 FAIL | `MAX_RETRY=2` 도메인 불변식 | 3회 시도 후 `DebateFailedEvent(reason="KARPATHY_MAX_RETRY")` |
 | EL JSON 파싱 실패 | 2단계 fallback (중괄호 추출 → 기본 리포트 생성) | `successProbability=50` + 디폴트 액션 3개 |
 
+**운영 대응 절차**: 5개 시나리오의 증상·즉시 대응·사후 분석·재발 방지는 [docs/RUNBOOK.md](docs/RUNBOOK.md) 참조.
+
 ---
 
 ## 8. Trade-offs & Decisions (ADR 요약)
@@ -516,7 +518,7 @@ Spring Boot Actuator `/actuator/health` + docker-compose `condition: service_hea
 | 동시 토론 처리량 한계 | 미측정 | 동상 |
 | 단일 AI vs 5인 토론 결과 일치율 | 미측정 | 면접後 별도 실험 |
 | Kafka rebalance 시 메시지 유실 여부 | `enable-auto-commit=false`로 설계상 방어, 실증 없음 | Week 3 부하 테스트 중 |
-| Redis 장애 시 그레이스풀 디그레이드 | 코드상 `onErrorResume`으로 FAILED 처리, 실증 없음 | Week 1 STEP 5 (장애복구 시나리오) |
+| Redis 장애 시 그레이스풀 디그레이드 | 코드상 `onErrorResume`으로 FAILED 처리, 운영 대응 절차 [docs/RUNBOOK.md §S2](docs/RUNBOOK.md) 정리 완료. **실증** 미수행 | Week 3 부하 테스트 중 실측 |
 
 ---
 

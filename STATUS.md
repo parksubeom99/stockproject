@@ -1,8 +1,9 @@
 # stockProject 현황 점검 (Week 1 STEP 1.1)
 
-> **작성 기준**: 워크트리 `lucid-burnell-48f33a` (HEAD = `f63fc98`, branch `claude/lucid-burnell-48f33a`)
-> **작성일**: 2026-05-05
-> **목적**: 4주 보강 진입 전 코드 정독 결과 및 인계서 대조 보고서. 코드 수정 없음.
+> **v0.2 갱신 기준**: 워크트리 `nifty-elion-feeec4` (HEAD = `59fbcb6`, branch `claude/nifty-elion-feeec4`)
+> **최초 작성**: 2026-05-05 (v0.1, lucid-burnell-48f33a)
+> **최종 갱신**: 2026-05-14 (v0.2 — STEP 3·5·7 + README 톤 + CLAUDE.md 완료 반영)
+> **목적**: 4주 보강 진행 SSOT. 코드 정독 결과 + 인계서 대조 + 진행 이력. 코드 수정 없음.
 
 ---
 
@@ -136,25 +137,71 @@ Port 분리 (도메인 → 인프라 의존성 역전):
 
 | Week 1 STEP | 인계서 추정 | 실제 상태 | 결론 |
 |---|---|---|---|
-| 1.1 코드 정독 + STATUS.md | 4시간 | 본 문서 | ✅ 본 STEP에서 완료 |
+| 1.1 코드 정독 + STATUS.md | 4시간 | 본 문서 (v0.1 → v0.2) | ✅ 완료 |
 | 1.2 Mock/Prod 프로파일 검증 | 2시간 | 코드 정합성만 OK, 실부팅 미검증 | ⏳ 회장님 로컬 (`docker compose up`) |
 | 1.3 Kafka·Redis 의존 점검 | 2시간 | docker-compose healthcheck·depends_on 정합성 OK | ⏳ 회장님 로컬 |
-| 1.4-A README P0 정정 (라인 181 `/debate/start`) | – | a7b06c2 (포트·API path 정합성) | ✅ 처리 완료 |
-| 1.4-B README 한국어 1차 보강 (전체 톤 다듬기) | 4시간 | 미수행 | ⏳ 미완 |
+| 1.4-A README P0 정정 (라인 181 `/debate/start`) | – | a7b06c2 (포트·API path 정합성) | ✅ 완료 |
+| 1.4-B README 한국어 1차 보강 (전체 톤 다듬기) | 4시간 | 3790f84 (한국어 톤 + 사실 정합성, PR #4) | ✅ 완료 |
+| 3 ADR 별도 파일 분리 | 2시간 | 87aa06f (ADR 9개 + adr/ 디렉터리 신설, PR #6) | ✅ 완료 |
+| 5 RUNBOOK.md (장애복구 시나리오) | 2시간 | 59fbcb6 (docs/RUNBOOK.md +387라인, PR #7 open) | ✅ 완료 |
+| 7 ARCHITECTURE.md | 2시간 | 8ef8d0b (525라인 설계 문서, PR #4) | ✅ 완료 |
+| (보너스) CLAUDE.md | – | c6d0dce (PR #3 머지, AI 도구 컨텍스트) | ✅ 완료 |
+| 8 INTERVIEW_QA.md | 3시간 | 회장님 skip 결정 (2026-05-14) | ⏭️ skip |
 
-**남은 Week 1 = 1.2 + 1.3 + 1.4-B** (1.2/1.3은 회장님 로컬 docker 부팅 + ANTHROPIC_API_KEY 검증, 1.4-B는 README 한국어 톤 1차 보강).
+**남은 Week 1 = 1.2 + 1.3** — 회장님 로컬에서 `docker compose up -d` 1회 부팅으로 동시 검증 가능 (`ANTHROPIC_API_KEY` 필요).
 
 ---
 
-## 10. Week 2~4 진입 전 체크리스트 (참고용)
+## 10. Week 2~4 진입 전 체크리스트 (입사後 잔여)
 
-- [ ] Week 2 ADR 3종 작성 위치: 워크트리 루트 `adr/` 디렉터리 신설 필요 (현재 부재)
+- [x] ~~Week 2 ADR 3종 작성 위치~~ → **adr/ 디렉터리 신설 + ADR 9개 작성 완료** (87aa06f, PR #6) — 인계서 3종 → 실제 9종으로 확장
 - [ ] Week 3 k6 시나리오 위치: 워크트리 루트 `perf/` 디렉터리 신설 필요 (현재 부재)
+  - 1회 토론 p50/p95/p99 지연 측정
+  - 동시 토론 처리량 한계
+  - Kafka rebalance 메시지 유실 실증 ([ARCHITECTURE.md §10](ARCHITECTURE.md))
+  - Redis 장애 그레이스풀 디그레이드 실증 ([docs/RUNBOOK.md §S2](docs/RUNBOOK.md) 보강)
 - [ ] Week 3 시연 환경 — `ANTHROPIC_API_KEY` 없이 부팅 가능한 mock 프로파일 docker-compose 별도 작성 (현재 prod 강제)
-- [ ] Week 4 시연 영상 — 5분 시한 / GitHub repo는 이미 PUBLIC (`gh repo view` 검증, 실행일 2026-05-10)
+- [ ] Week 4 시연 영상 (STEP 6) — 5분 시한 / GitHub repo는 이미 PUBLIC (`gh repo view` 검증, 실행일 2026-05-10)
+- [ ] Week 4 CHANGELOG.md (STEP 9)
+- [ ] 면접後 별도 실험 — 단일 AI vs 5인 토론 결과 일치율 (가설 검증)
+
+---
+
+## 11. 진행 이력 SSOT (PR/커밋)
+
+본 STATUS.md 갱신 시점(2026-05-14 / HEAD `59fbcb6`) 기준 4주 보강 로드맵 진행 PR/커밋 목록.
+
+| PR | 커밋 | 작업 | 상태 |
+|---|---|---|---|
+| #2 | b006654, 63007b2 | stock-app 정합성 fix (api.ts 포트 + WebSocket 토큰 + DebateRequestScreen red flag 5건) | ✅ merged |
+| #3 | c6d0dce → de99284 | CLAUDE.md (AI 도구 컨텍스트) | ✅ merged |
+| #4 | 3790f84 + 25964ec + 8ef8d0b → f3ab385 | STATUS.md + README 톤 + ARCHITECTURE.md (525라인) | ✅ merged |
+| #6 | 87aa06f | adr/ 디렉터리 신설 + ADR 9개 분리 | ✅ merged |
+| #7 | 59fbcb6 | docs/RUNBOOK.md (+387) + ARCHITECTURE §7.3/§10 cross-link | 🟡 open |
+
+### 면접前 잔여 (회장님 로컬 실부팅 1건)
+
+| STEP | 작업 | 추정 |
+|---|---|---:|
+| 1.2 | Mock/Prod 프로파일 실부팅 검증 | ~30분 |
+| 1.3 | Kafka·Redis healthcheck 실증 | (1.2와 동시 검증) |
+
+**검증 명령**: `docker compose up -d` + `docker compose ps` + `curl http://localhost:8083/actuator/health` (헬스체크 명령 모음은 [docs/RUNBOOK.md §6](docs/RUNBOOK.md))
+
+### 입사後 잔여 (Week 3~4 + 면접後 실험)
+
+| 카테고리 | 항목 | 위치 |
+|---|---|---|
+| Week 3 | k6 부하 시나리오 | `perf/` 신설 필요 |
+| Week 3 | mock 전용 docker-compose | 현재 prod 강제 |
+| Week 4 | 데모영상 풀버전 (5분) | (STEP 6) |
+| Week 4 | CHANGELOG.md | (STEP 9) |
+| 면접後 | 단일 AI vs 5인 토론 결과 일치율 | 별도 실험 |
+| 옵션 | INTERVIEW_QA.md | 회장님 skip 결정 (재고 시 ~3h) |
 
 ---
 
 ## 변경 이력
 
+- **v0.2 · 2026-05-14** · 워크트리 `nifty-elion-feeec4` (HEAD `59fbcb6`) — STEP 1.4-B / 3 / 5 / 7 + CLAUDE.md 완료 반영. §9 인계 대조 표 4행 추가, §10 Week 2 ADR 체크 + Week 3~4 + 면접後 잔여 명시화. §11 진행 이력 SSOT 신설 (PR #2/#3/#4/#6/#7). STEP 8 회장님 skip 결정 반영.
 - v0.1 · 2026-05-05 · 워크트리 `lucid-burnell-48f33a` 직접 read 기반 작성
