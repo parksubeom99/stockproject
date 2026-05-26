@@ -380,7 +380,6 @@ curl -s http://localhost:8083/debate/{requestId}/status
 - [adr/0008-kafka-manual-ack-thread.md](../adr/0008-kafka-manual-ack-thread.md) — Kafka manual ack + 별도 Thread 설계 근거
 - [adr/0009-karpathy-retry-saga.md](../adr/0009-karpathy-retry-saga.md) — KARPATHY 재시도 = Saga compensating transaction
 - [adr/0005-redis-ttl-kafka-cqrs.md](../adr/0005-redis-ttl-kafka-cqrs.md) — Redis TTL 24h 결정 근거
-- [CLAUDE.md](../CLAUDE.md) — Claude Code 컨텍스트 (서비스 토폴로지 빠른 참조)
 
 ---
 
